@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>v-on</title>
+		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+		<meta name="viewport" content="width=device-width initial-scale=1.0"/>
+		<style>
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			<h1>模糊搜索</h1>
+			<input type="text" placeholder="请输入字母" @input="handleInput"/>
+			<ul>
+				<li v-for="item in dataList">
+					{{item}}
+				</li>
+			</ul>
+			
+		</div>
+		
+	</body>
+	<script type="text/javascript">
+		var vm = new Vue({
+			el:"#app",
+			data:{
+				dataList:["aaa","bbb","ccc","ddd","add","cee","eee"],
+				originList:["aaa","bbb","ccc","ddd","add","cee","eee"]
+			},
+			methods:{
+				handleInput:function(evt){
+					
+					
+					//借用一个原始数组进行保留，只对dataList进行更新
+					this.dataList = this.originList.filter(function(item){
+						return item.includes(evt.target.value);
+					})
+				}
+			}
+		})
+	</script>
+</html>

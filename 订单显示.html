@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>v-on</title>
+		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+		<meta name="viewport" content="width=device-width initial-scale=1.0"/>
+		<style>
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			<h1>所有订单</h1>
+			<ul>
+				<li v-for="item,index in orderList">
+					<span>{{item.name}}</span>
+					<span>{{item.price}}</span>
+					<span v-if="item.state===0">交易完成</span>
+					<span v-else-if="item.state===1">已发货</span>
+					<span v-else>未发货</span>
+				</li>
+			</ul>
+		</div>
+		
+	</body>
+	<script type="text/javascript">
+		var vm = new Vue({
+			el:"#app",
+			data:{
+				//state 0:已完成 1:已发货 2:未发货
+				orderList:[
+					{id:1,name:"华为Meta30",price:3000,state:0},
+					{id:2,name:"iPhone 12 pro",price:5999,state:0},
+					{id:3,name:"小米11",price:3000,state:1},
+					{id:4,name:"VIVO X",price:3000,state:2},
+				]
+			}
+		})
+	</script>
+</html>
