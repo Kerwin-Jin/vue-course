@@ -6,18 +6,38 @@
 		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 		<meta name="viewport" content="width=device-width initial-scale=1.0"/>
 		<style>
+			li{
+				list-style: none;
+			}
+			li img{
+				width: 100px;
+			}
 		</style>
 	</head>
 	<body>
 		<div id="app">
-			<h1>模糊搜索-函数表达式</h1>
-			<input type="text" placeholder="请输入字母" v-model="inputVal"/>
-			<ul>
-				<li v-for="item in myfilter()">
-					{{item}}
-				</li>
-			</ul>
-			
+			<h1>购物车</h1>
+			<template v-if="list.length!==0">
+				<input type="checkbox">全选/全不选
+				<ul>
+					<li v-for="(item,index) in list" :key="item.id">
+						<input type="checkbox" v-model="checkGroup" :value="item">
+						<img :src="item.pic" :title="item.name">
+						<span>商品名称：{{item.name}}</span>
+						<span>商品价格：￥{{item.price}}</span>
+						<span>【限购：{{item.limit}}件】</span>
+						<button @click="item.number--" :disabled="item.number===1">-</button>
+						{{item.number}}
+						<button @click="item.number++" :disabled="item.number===item.limit">+</button>
+
+
+						<button @click="handleDel(index,item.id)">删除</button>
+					</li>
+				</ul>
+
+				<div style="background-color: yellow;" >共选中{{total()}}件商品，金额：{{sum()}}</div>
+			</template>
+			<div v-else>购物车空空如也</div>
 		</div>
 		
 	</body>
@@ -25,13 +45,59 @@
 		var vm = new Vue({
 			el:"#app",
 			data:{
-				inputVal:"",
-				dataList:["aaa","bbb","ccc","ddd","add","cee","eee"],
+				checkGroup:[],
+				list:[
+					{
+						id:1001,
+						name:"华为P30",
+						number:1,
+						limit:5,
+						price:3000,
+						pic:"https://p1.pstatp.com/origin/fe490003ec7aca3588b5.jpg"
+					},
+					{
+						id:1002,
+						name:"iPhone",
+						number:2,
+						limit:10,
+						price:5999,
+						pic:"https://p1.pstatp.com/origin/fff100030cafdb12a6cf.jpg"
+					},
+					{
+						id:1003,
+						name:"小米",
+						number:3,
+						limit:5,
+						price:4999,
+						pic:"https://p1.pstatp.com/origin/ff9c00015f963257da80.jpg"
+					}
+				]
 			},
 			methods:{
-				
-				myfilter(){
-					return this.dataList.filter(item=>item.includes(this.inputVal));
+				sum:function(){
+					var total = 0;
+					this.checkGroup.forEach(item => {
+						total += item.price*item.number;
+					});
+					console.log(total);
+					return total;
+				},
+				handleDel:function(index,deleteId){
+
+					//删除checkGroup中没有选中的item
+					this.checkGroup = this.checkGroup.filter(item=>item.id!=deleteId);
+
+					//删除原始数组中对应选中索引的元素
+					this.list.splice(index,1);
+				},
+
+				//计算选中的商品数目
+				total(){
+					var total = 0;
+					this.checkGroup.forEach(item=>{
+						total+=item.number;
+					})
+					return total;
 				}
 			}
 		})

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Vue</title>
+		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+		<meta name="viewport" content="width=device-width initial-scale=1.0"/>
+		<style>
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			<h2>多选框绑定</h2>
+			<input type="checkbox" v-model="checkGroup" value="Vue"/>Vue
+			<input type="checkbox" v-model="checkGroup" value="React"/>React
+			<input type="checkbox" v-model="checkGroup" value="jQuery"/>JQuery
+			<button type="button" @click="handleSubmit()">提交</button>
+			
+			
+			<h2>记住我single-checkbox</h2>
+			<input type="checkbox" v-model="isRem"/>记住我
+			<button type="button" @click="handleLogin()">登录</button>
+			
+			
+			<h2>单选radio</h2>
+			<input type="radio" v-model="favlang" value="Vue"/>Vue
+			<input type="radio" v-model="favlang" value="React"/>React
+			<input type="radio" v-model="favlang" value="jQuery"/>jQuery
+			<button type="button" @click="handleSelect()">提交</button>
+		</div>
+		
+	</body>
+	<script type="text/javascript">
+		var vm = new Vue({
+			el:"#app",
+			data:{
+				checkGroup:[],
+				isRem:false,
+				favlang:""
+			},
+			methods:{
+				handleSubmit:function(){
+					console.log("提交",this.checkGroup);
+					this.checkGroup = [];
+				},
+				handleLogin:function(){
+					console.log("是否记住我",this.isRem);
+				},
+				handleSelect:function(){
+					console.log("最喜欢",this.favlang);
+				}
+			}
+		})
+	</script>
+</html>
