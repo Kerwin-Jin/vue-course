@@ -28,6 +28,136 @@
 
 Vue就是基于MVVM模式的一种框架，中间的vm对视图（View）和Module（模型）进行双向数据绑定
 
+### 事件绑定注意
+
+在事件绑定中，调用方法时加括号和不加括号的区别：当加括号时候，Vue会把操作权交给你，所以这时候想在方法中获取事件对象如果没传值的话就会undefine，当不加括号的时候，Vue认为自己该操作，所以就会把事件对象当做默认的一个参数传到被调用的方法中。
+
+```html
+<body>
+    <div id="app">
+        <input type="text" @input="handleInput"/>
+        <button @click="handleAdd()">添加</button>
+    </div>
+</body>
+<script type="text/javascript">
+    var vm = new Vue({
+        el:"#app",
+        data:{},
+        methods:{
+            handleAdd:function(evt){
+                console.log(111,evt);   //打印结果：111 undifine
+            },
+            handleInput:function(evt){
+                console.log(2222222, evt);  //打印结果：111 InputEvent对象
+            }
+        }
+    })
+</script>
+
+```
+
+### Class属性为对象或数组
+
+见代码注释：
+
+```html
+<style>
+    .aa{color: red;}
+    .bb{font-size: 40px;}
+    .cc{font-weight: bold;}
+</style>
+</head>
+<body>
+    <div id="app">
+        <div :class="classArr">动态切换class-对象写法</div>
+        <div :class="classObj">动态切换class-对象写法</div>
+    </div>
+
+</body>
+<script type="text/javascript">
+    var vm = new Vue({
+        el:"#app",
+        data:{
+            classObj:{
+                "aa":true,
+                "bb":true,
+                "cc":false          //true为添加该属性，false为不添加
+            },
+            classArr:["aa","bb","cc"]   //只要在数组中的值都会被添加，对样式进行增加或移除，只需要对数组进行操作就行
+        }
+    })
+</script>
+
+```
+
+### v-for知识
+
+#### 对象遍历
+
+用v-for也可以进行对象的遍历，v-for=” value,key,index in obj”
+
+其中，遍历出来的item是obj的value，index是obj的key
+
+数组的本质也是对象，只不过item是每一项，index为索引值
+
+```html
+<body>
+    <div id="app">
+        <ul>
+            <li v-for="value,key,index in obj">
+            	{{value}}----{{key}}----{{index}}
+            </li>
+        </ul>
+    </div>
+</body>
+<script>
+	var vm = new Vue({
+        el:"#app",
+        data:{
+            obj:{
+                name:"kerwin",
+                age:18,
+                location:"Beijing"
+            }
+        }
+    })
+</script>
+```
+
+#### key值
+
+作用：跟踪每个节点的身份，从而重用和重新排序现有元素
+
+理想的key值是每项都有的且唯一的id。(Item.id)
+
+
+
+设置虚拟dom是为了能够在对比之后找到哪些节点是可以复用的，而设置虚拟dom又不足以找到快速对比的方法，所以在长列表中必须设置一个有效的key值。这样通过一个虚拟的dom和key值的有效设定才能够用最快速的方法找到哪些节点需要更新，哪些节点需要删除，从而进行下一步真实dom的修改。这也是VUE为什么渲染的这么快，为什么能提高性能的原因。
+
+
+
+为什么不用真实dom进行操作呢？原因是真实dom里面的东西太多！做如下实验：
+
+### 数组更新检测
+
+- 使用以下方法操作数组，可以被检测到变动
+
+push()、pop()、shift()、unshift()、splice()、sort()、reverse()
+
+- 无法检测变动的方法，解决的方法时用新数组替换旧数组
+
+filter()、concat()、slice()、map()
+
+- 无法检测以下变动的数组
+
+Vm.items[indexOfItem] = newValue   //vm.dataList[0] = “kerwin”
+
+**解决方法：**
+
+​	1、splice方法  arr.splice(0,1,”kerwin”) 		 //将数组的第一个值改为kerwin
+
+​	2、Vue.set(example1.items, indexOfItem, newValue)
+
 ### 事件处理
 
 当进行事件处理的时候，不写括号可以默认将事件对象传过去，那如果想传值又想获取事件对象呢？那就用$event来代替事件对象，这个方法时万能方法，如下边的@click="handleAdd($event,2)"，把$event当做参数传过去，在handleAdd中就可以获取了，既能获取想要传的值2，又能获取事件对象。
@@ -169,4 +299,160 @@ v-model对多选框进行绑定时，是以数组进行存储的，必须在标�
     })
 </script>
 ```
+
+### 表单修饰符
+
+| 修饰符  | 说明         |
+| :------ | ------------ |
+| .lazy   | 懒更新       |
+| .number | 转为数字格式 |
+| .trim   | 去掉首尾空格 |
+
+```html
+<body>
+    <div id="app">
+        用户名：<input type="text" v-model.lazy="username"/>{{username}}
+        密码：<input type="password" v-model.trim="password"/>{{password}}
+        年龄：<input type="number" v-model.number="age"/>{{age}}
+        <button type="button" @click="handleSubmit()">提交</button>
+    </div>
+
+</body>
+<script type="text/javascript">
+    var vm = new Vue({
+        el:"#app",
+        data:{
+            username:"",
+            password:"",
+            age:18
+        },
+        methods:{
+            handleSubmit(){
+                console.log(this.username);
+                console.log(this.password);
+                console.log(this.age);
+            }
+        }
+
+    })
+</script>
+```
+
+### 计算属性与方法的区别
+
+| 计算属性computed                                             | 方法methods                                           |
+| ------------------------------------------------------------ | ----------------------------------------------------- |
+| 必须要有return值，这点是不能取代methods的                    | 不一定要有return值，也可能只是逻辑处理，没有返回值    |
+| 有缓存。computed比较聪明，多个地方调用的话如果值没改变就只计算一遍 | 没有缓存。methods是地地道道的老实人，每次调用都会执行 |
+
+### mixins
+
+将一个obj对象混入到一个Vue实例中，obj对象中的属性就都可以用了，提高代码的重用性，就像Java中的继承一样，把obj继承过来就可以用里边的属性了。但是，如果我Vue实例中有这个方法咋办？不用担心，我自己Vue中同名的方法优先级更高。如下边的handleClick()。
+
+```html
+<body>
+    <div id="app">
+        <button type="button" @click="handleClick1()">Click1</button>
+        <button type="button" @click="handleClick2()">Click2</button>
+        {{total}}
+    </div>
+
+</body>
+<script type="text/javascript">
+
+    const obj = {
+        methods:{
+            handleClick(){
+                console.log("handleClick---obj");
+            },
+            handleClick1(){
+                console.log("handleClick1");
+            },
+            handleClick2(){
+                console.log("handleClick2");
+            }
+        },
+        computed:{
+            total(){
+                return "computed 111111111";
+            }
+        }
+    }
+    var vm = new Vue({
+        el:"#app",
+        mixins:[obj],	//将上边的obj混入到这个Vue实例中，obj对象中的属性就都可以用了，提高代码的重用性，用数组的方式进行混入
+        data:{
+
+        },
+        methods:{
+			handleClick(){
+                console.log("handleClick---Vue");
+            }
+        }
+
+    })
+</script>
+```
+
+### fetch
+
+why?XMLHttpRequest是一个设计粗糙的API，配置和调用方式非常混乱，而且基于事件的异步模型写起来不友好。
+
+那些专家也认识到了这一点，所以又重出江湖，重新定义了一个新标准就是fetch，所以说fetch是属于W3C的新标准，可以直接用，不需要导入任何库。
+
+**get方式**
+
+```javascript
+fetch("https://autumnfish.cn/api/joke/list?num=3")
+    .then(res=>{
+        console.log(res);
+        return res.json();
+    }).then(res=>{
+        console.log(res);
+    })
+```
+
+**post方式一**
+
+```javascript
+fetch("**",{
+    method:"post",
+    headers:{
+        "Content-Type":"application/x-www-form-urlencoded"
+    },
+    body:"name=kerwin&age=18",
+    credentials:'include'		//如果需要带cookie，需要加上这个属性
+})
+.then(res=>res.json()).then(res=>{console.log(res)})
+```
+
+**post方式二**
+
+```javascript
+fetch("**",{
+    method:"post",
+    headers:{
+        "Content-Type":"application/json"
+    },
+    body:JSON.stringify({
+        name:"kerwin",
+        age:18
+    })
+})
+.then(res=>res.json()).then(res=>{console.log(res)})
+```
+
+注意：fetch请求默认是不带cookie的，需要设置fetch(url,{credentials:'include'})，axios和jQuery都会默认带着cookie
+
+> https://unpkg.com/axios/dist/axios.min.js
+
+几个API接口
+
+>  https://autumnfish.cn/api/joke/list?num=3
+>
+> https://autumnfish.cn/api/user/reg
+
+### axios
+
+
 
