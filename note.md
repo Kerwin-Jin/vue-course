@@ -454,5 +454,190 @@ fetch("**",{
 
 ### axios
 
+**get请求**
+
+```javascript
+axios.get("https://autumnfish.cn/api/joke/list?num=3")
+					.then(res=>{
+						console.log(res);
+						this.jokes = res.data.jokes;
+					}).then(err=>{
+						console.log(err);
+					})
+```
+
+**post请求**
+
+在进行post请求时，只需要在第二个参数中传对应格式的参数，axios会自动转换成对应的请求体
+
+```javascript
+// "Content-Type":"application/x-www-form-urlencoded"
+axios.post("**","name=kerwin&age=18").then(res=>{console.log(res)});
+
+
+// "Content-Type":"application/json"
+axios.post("**",{
+	name:"kerwin",
+	age:18
+}).then(res=>{console.log(res)}).then(err=>{console.log(err)})
+```
+
+### 组件
+
+注意：
+
+1. 起名字：js驼峰，html连接符-
+2. dom片段没有代码提示，没有高亮显示（Vue单文件组件可以解决）
+3. css只能写成行内式（单文件组件可以解决）
+4. template只能包含一个根节点
+5. 组件是件孤岛，无法【直接】访问外面组件的状态和方法（需要通过间接的组件通信方式来交流）
+6. 自定义组件的data必须是一个函数
+
+### 组件通信
+
+#### 父传子
+
+父传子的时候，是通过属性来传值，在子组件中添加props属性
+
+```javascript
+//一般形式
+props:["mytitle","myshow"]
+
+//属性验证形式
+props:{
+    mytitle:String,
+    myshow:Boolean
+}
+
+//默认值形式
+props:{
+    mytitle:{
+   		type:String,
+        default:"默认值"
+    },
+    myshow:{
+        type:Boolean,
+        default:true
+    }
+}
+```
+
+#### 子传父
+
+子传父是通过在子组件上添加一个类似于监听的事件，当子组件触发这个事件的时候，相应的执行父组件中的方法，子组件也可以将值传到父组件中。
+
+在下面这个例子中，父组件在子组件上放了一个【myevent】的监听，当子组件通过【this.$emit("myevent",this.money);】触发的时候，父组件就执行相应的【handleEvent】方法，并且获取到了子组件传过来的【money】值。
+
+```html
+	<body>
+		<div id="app">
+			parent
+			<child @myevent="handleEvent"></child>
+		</div>
+	</body>
+	<script type="text/javascript">
+		Vue.component("child",{
+			data(){
+				return{
+					money:1000000
+				}
+			},
+			template:`
+				<div style="background:yellow">
+					child<button @click="handleClick()">按钮</button>
+				</div>
+			`,
+			methods:{
+				handleClick(money){
+					this.$emit("myevent",this.money);
+				}
+			}
+		})
+		var vm = new Vue({
+			el:"#app",
+			data:{
+			},
+			methods:{
+				handleEvent(money){
+					console.log("父组件11111111111111",money);
+				}
+			}
+		})
+	</script>
+```
+
+#### ref
+
+ref放在标签上，拿到的是原生dom节点。
+
+如下例子，ref放在div上，然后通过this.$refs可以获取所有添加了ref属性的标签，然后在通过.aaa找到这个div，接着再通过.innerHTML获取到该div中的值
+
+```html
+<body>
+		<div id="app">
+			<div ref="aaa">11sdf11</div>
+			<button @click="handleClick()">click</button>
+		</div>
+		
+	</body>
+	<script type="text/javascript">
+		
+		var vm = new Vue({
+			el:"#app",
+			data:{
+			},
+			methods:{
+				handleClick(){
+					console.log(this.$refs.aaa.innerHTML);
+				}
+			}
+		})
+	</script>
+```
+
+ref放在标签上，拿到的是组件对象，可以用于父子组件通信，但是不推荐这个用法，这个方法太暴力！又能获取又能修改
+
+```html
+<body>
+		<div id="app">
+			<child ref="child"></child>
+			<button @click="handleClick()">click</button>
+		</div>
+		
+	</body>
+	<script type="text/javascript">
+		
+		Vue.component("child",{
+			data(){
+				return{
+					childName:"1111111111111111111"
+				}
+			},
+			template:`
+				<div>{{childName}}</div>
+			`
+		})
+		var vm = new Vue({
+			el:"#app",
+			data:{
+			},
+			methods:{
+				handleClick(){
+					console.log(this.$refs.child.childName);		//获取子组件的值
+					this.$refs.child.childName = "222222222222222"	//设置子组件的值
+				}
+			}
+		})
+	</script>
+```
+
+#### 中间人模式
+
+
+
+
+
+
+
 
 

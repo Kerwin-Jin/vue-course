@@ -4,6 +4,7 @@
 		<meta charset="utf-8">
 		<title>Vue</title>
 		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 		<meta name="viewport" content="width=device-width initial-scale=1.0"/>
 		<style>
 			
@@ -11,33 +12,32 @@
 	</head>
 	<body>
 		<div id="app">
-			<child ref="child"></child>
-			<button @click="handleClick()">click</button>
+			<button type="button" @click="handleFetch()">Click</button>
+			<ul>
+				<li v-for="item in jokes">{{item}}</li>
+			</ul>
 		</div>
 		
 	</body>
 	<script type="text/javascript">
 		
-		Vue.component("child",{
-			data(){
-				return{
-					childName:"1111111111111111111"
-				}
-			},
-			template:`
-				<div>{{childName}}</div>
-			`
-		})
 		var vm = new Vue({
 			el:"#app",
 			data:{
+				jokes:[]
 			},
 			methods:{
-				handleClick(){
-					console.log(this.$refs.child.childName);		//获取子组件的值
-					this.$refs.child.childName = "222222222222222"	//设置子组件的值
+				handleFetch(){
+					axios.get("https://autumnfish.cn/api/joke/list?num=3")
+					.then(res=>{
+						console.log(res);
+						this.jokes = res.data.jokes;
+					}).then(err=>{
+						console.log(err);
+					})
 				}
 			}
+			
 		})
 	</script>
 </html>

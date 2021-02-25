@@ -11,31 +11,37 @@
 	</head>
 	<body>
 		<div id="app">
-			<child ref="child"></child>
-			<button @click="handleClick()">click</button>
+			parent
+			<child @myevent="handleEvent"></child>
 		</div>
 		
 	</body>
 	<script type="text/javascript">
-		
 		Vue.component("child",{
 			data(){
 				return{
-					childName:"1111111111111111111"
+					money:1000000
 				}
 			},
 			template:`
-				<div>{{childName}}</div>
-			`
+				<div style="background:yellow">
+					child<button @click="handleClick()">按钮</button>
+				</div>
+			`,
+			methods:{
+				handleClick(money){
+					this.$emit("myevent",this.money);
+				}
+			}
 		})
+		
 		var vm = new Vue({
 			el:"#app",
 			data:{
 			},
 			methods:{
-				handleClick(){
-					console.log(this.$refs.child.childName);		//获取子组件的值
-					this.$refs.child.childName = "222222222222222"	//设置子组件的值
+				handleEvent(data){
+					console.log("父组件11111111111111",data)
 				}
 			}
 		})

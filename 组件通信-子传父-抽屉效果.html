@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Vue</title>
+		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+		<meta name="viewport" content="width=device-width initial-scale=1.0"/>
+		<style>
+			
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			<navbar @aaa="change()"></navbar>
+			<sidebar v-show="isShow"></sidebar>
+		</div>
+		
+	</body>
+	<script type="text/javascript">
+		Vue.component("navbar",{
+			template:`
+				<button @click="handleClick">Kerwin</button>
+			`,
+			methods:{
+				handleClick(){
+					this.$emit("aaa");
+				}
+			}
+		})
+		
+		
+		Vue.component("sidebar",{
+			template:`
+				<div>
+					<ul>
+						<li>我的收藏</li>
+						<li>我的相册</li>
+						<li>我的文件</li>
+					</ul>
+				</div>
+			`
+		})
+		
+		var vm = new Vue({
+			el:"#app",
+			data:{
+				isShow:false
+			},
+			methods:{
+				change(){
+					this.isShow = !this.isShow;
+				}
+			}
+		})
+	</script>
+</html>
