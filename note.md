@@ -637,11 +637,223 @@ ref放在标签上，拿到的是组件对象，可以用于父子组件通信�
 
 #### bus通信
 
+中央事件总线
+
+原理：一个订阅者，一个发布者，就类似于我们在微信中订阅的公众号一样，我们订阅某个公众号之后，当该公众号发布文章时，我们这边就能收到
+
+订阅的时候用bus.$on("kerwin",()=>{})，发布的时候用bus.$emit("kerwin",data)
+
+注意：$on() 和$emit() 必须用同一个bus，即同一个Vue对象！
+
+```html
+	<body>
+		<div id="app">
+			<button @click="getData()">ajax</button>
+			<filmlist v-for="item in dataList" :film="item" :key="item.id"></filmlist>
+			<detail></detail>
+		</div>
+	</body>
+	<script type="text/javascript">
+		
+		var bus = new Vue();			//中央事件总线
+        
+        //影片列表组件
+		Vue.component("filmlist",{
+			template:`
+				<div style="border:1px solid #f40;width:200px">
+					<img :src="film.img.replace('w.h\/','')" style="width:200px;"/>
+					<h3>{{film.nm}}</h3>
+					<button @click="getDetail()">详情</button>
+				</div>
+			`,
+			props:["film"],
+			methods:{
+				getDetail(){
+					bus.$emit("kerwin",this.film.star);		//触发自定义的kerwin事件，并将参数传过去
+				}
+			}
+		})
+		
+        //影片详情组件
+		Vue.component("detail",{
+			
+			template:`
+				<div style="border:1px solid #f40;position:fixed;right:0;top:0;">
+					<h3>{{star}}</h3>
+				</div>
+			`,
+			data(){
+				return{
+					star:""
+				}
+			},
+			mounted(){
+				bus.$on("kerwin",(data)=>{			//在mounted生命周期函数中已经订阅，所以当发布者发布消息的时候就能立马收到
+					console.log(111,data);
+					this.star = data;
+				})
+			}
+		})
+		
+		var vm = new Vue({
+			el:"#app",
+			data:{
+				dataList:[],
+			},
+			methods:{
+				getData(){
+					axios.get("film.json")
+					.then(res=>{
+						console.log(res.data);
+						this.dataList = res.data.movieList;
+					})
+				}
+			}
+		})
+	</script>
+```
 
 
 
+### 动态组件
+
+动态组件用Vue预留的<component is="home|list|shopcar"></component>来显示，他是个墙头草，is属性的值传什么，他就显示什么，如前面的传home、list、shopcar其中任意一个值，那他就显示对应的组件。
 
 
+
+进行切换的时候，如果不想让原来的组件内容消失，可以加个<keep-alive></keep-alive>将<component><component>包起来。
+
+```html
+	<body>
+		<div id="app">
+            <keep-alive>
+				<component :is="which"></component>
+            </keep-alive>
+			<footer>
+				<ul>
+					<li @click="which = 'home'">首页</li>
+					<li @click="which = 'list'">列表</li>
+					<li @click="which = 'shopcar'">购物车</li>
+				</ul>
+			</footer>
+		</div>
+	</body>
+	<script type="text/javascript">
+		
+		Vue.component("home",{
+			template:`
+				<div>首页
+        			<input type="text" />
+        		</div>
+			`
+		})
+		Vue.component("list",{
+			template:`
+				<div>列表</div>
+			`
+		})
+		Vue.component("shopcar",{
+			template:`
+				<div>购物车</div>
+			`
+		})
+		
+		var vm = new Vue({
+			el:"#app",
+			data:{
+				which:"home"
+			}
+		})
+	</script>
+```
+
+### 插槽slot
+
+插槽的一个理念就是混入父组件的内容到子组件中，在子组件中需要预留出来一个位置给父组件用。
+
+没有名字的插槽叫单个插槽，有名字的插槽叫具名插槽
+
+
+
+父组件模板的内容在父组件作用于内编译，子组件模板的内容在子组件作用域内编译。说白了，就是可以把父组件中的内容显示在子组件中，但是该内容还是属于父组件，可以由父组件进行控制，更加灵活通过子传父和父传子进行交互通信。
+
+```html
+	<body>
+		<div id="app">
+			<h1>插槽-slot</h1>
+			<child>
+				<div slot="hello">你好</div>
+				<div slot="world">世界</div>
+			</child>
+		</div>
+	</body>
+	<script type="text/javascript">
+		Vue.component("child",{
+			template:`
+				<div>
+					child
+					<slot name="hello"></slot>
+					<slot name="world"></slot>
+				</div>
+			`
+		})
+		var vm = new Vue({
+			el:"#app",
+			data:{}
+		})
+	</script>
+```
+
+在新版的Vue中，通过v-slot这个指令来标明插槽，但是注意，v-slot只能用在组件中或者<template></template>中，不能用在普通标签上例如div。
+
+此外，v-slot:a 这个指令可以简写成#a，如下面的例子中v-slot:left可以简写成#left
+
+```html
+	<body>
+		<div id="app">
+			<navbar>
+				<template v-slot:left>
+					<button>左边<i>icon</i></button>
+				</template>
+				<template v-slot:right>
+					<button>左边<i>icon</i></button>
+				</template>
+			</navbar>
+		</div>
+	</body>
+```
+
+### 生命周期
+
+生命周期函数也叫钩子函数，每个组件都有这八个生命周期函数
+
+beforeCreate()
+
+在这个周期中，Vue只是让这个组件初始化他的一些函数，状态等，但是此时这些依赖还没有做呢，状态的拦截还都没有做呢， 所以在这个周期中我们也不会做什么事情，在这个周期中我们访问状态，会发现访问不到，得到的是undefined。
+
+created()
+
+在这个周期中可以做一些初始化的操作，可以让我们对状态做一些修改，计算的工作。
+
+beforeMount()
+
+发生在dom挂载之前，此时还无法访问dom，还没有挂载好
+
+mounted()
+
+此时dom已经挂载完成了，可以访问dom，可以监听事件，可以ajax，可以设置定时器
+
+updated()
+
+获取到更新后的dom，依赖于dom操作的库，需要知道状态更新完，就可以在这里执行
+
+destroyed()
+
+在这里可以做一些取消定时器的操作，也可以做一些window事件的解绑操作等等
+
+### 指令
+
+之前的v-for、v-bind、v-if 等等都是Vue给定义的指令，我们也可以来定义自己的组件
 
 
 

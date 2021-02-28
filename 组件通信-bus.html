@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Vue</title>
+		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+		<meta name="viewport" content="width=device-width initial-scale=1.0"/>
+		<style>
+			
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			<filmlist v-for="item in dataList" :film="item" :key="item.id">
+			</filmlist>
+			<detail></detail>
+		</div>
+	</body>
+	<script type="text/javascript">
+		
+		//中央事件总线
+		var bus = new Vue();
+		
+		Vue.component("filmlist",{
+			template:`
+				<div style="border:1px solid #f40;width:200px">
+					<img :src="film.img.replace('w.h\/','')" style="width:200px;"/>
+					<h3>{{film.nm}}</h3>
+					<button @click="getDetail()">详情</button>
+				</div>
+			`,
+			props:["film"],
+			methods:{
+				getDetail(){
+					bus.$emit("kerwin",this.film.star);
+				}
+			}
+		})
+		
+		Vue.component("detail",{
+			
+			template:`
+				<div style="border:1px solid #f40;position:fixed;right:0;top:0;">
+					<h3>{{star}}</h3>
+				</div>
+			`,
+			data(){
+				return{
+					star:""
+				}
+			},
+			mounted(){
+				bus.$on("kerwin",(data)=>{
+					console.log(111,data);
+					this.star = data;
+				})
+			}
+		})
+		
+		var vm = new Vue({
+			el:"#app",
+			data:{
+				dataList:[],
+			},
+			
+			mounted(){
+				axios.get("film.json")
+				.then(res=>{
+					console.log(res.data);
+					this.dataList = res.data.movieList;
+				})
+			}
+		})
+	</script>
+</html>
