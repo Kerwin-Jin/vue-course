@@ -855,5 +855,147 @@ destroyed()
 
 之前的v-for、v-bind、v-if 等等都是Vue给定义的指令，我们也可以来定义自己的组件
 
+通过Vue.directive()来定义指令，第一个参数是指令的名字，不加"v-"，如下边的"v-hello"，定义的时候只需要写hello
+
+两个生命周期函数，第一个是inserted，dom元素插入的时候触发，第二个是update，dom元素更新的时候触发。
+
+每个生命周期函数可以传两个参数，第一个参数是dom元素本身，第二个参数是指令传过来的值，如下边的传过来得color值。
+
+```html
+	<body>
+		<div id="app">
+			<div v-hello="color">111111</div>
+			<div v-hello="'blue'">111111</div>
+			<div v-hello="'green'">111111</div>
+		</div>
+		
+	</body>
+	<script type="text/javascript">
+		Vue.directive("hello",{
+			inserted(el,binding){
+				console.log("插入",el);
+				console.log(binding);
+				el.style.color = binding.value;
+			},
+			
+			update(el,binding){
+				console.log("更新",el);
+				console.log(binding);
+				el.style.color = binding.value;
+			}
+		})
+		var vm = new Vue({
+			el:"#app",
+			data:{
+				color:"red"
+			}
+			
+		})
+		
+	</script>
+```
+
+通过这个例子可以看到，inserted和update两个函数中的代码都是差不多的，都是把传过来的参数赋了一下值，Vue也给提供了一种简便的方式，如下：
+
+```javascript
+Vue.directive("hello",function(el,binding){
+    el.style.color = binding.value
+})
+```
+
+### nextTick
+
+this.$nextTick是Vue提供的一个黑魔法，他在这里呢，能给你一个时间点，什么时间点呢？什么时候dom插入完成了，他会给你提供一个回调函数，你用这个的话就能实现一些特别需要依赖dom实例化完之后干的一些事，比如进行new Swiper的初始化
+
+```html
+<body>
+		<div id="app">
+			
+			<div class="swiper-container kerwin">
+				<div class="swiper-wrapper">
+					<div class="swiper-slide" v-for="item,index in dataList">
+						{{item}}
+					</div>
+				</div>
+				<div class="swiper-pagination"></div>
+			</div>
+		</div>
+		
+	</body>
+	<script type="text/javascript">
+		
+		var vm = new Vue({
+			el:"#app",
+			data:{
+				dataList:[]
+			},
+			mounted(){
+				setTimeout(()=>{
+					this.dataList = ["aa","bb","cc","dd"]
+					
+					this.$nextTick(function(){
+						console.log("我执行的比update都晚(๑′ᴗ‵๑)，并且只执行一次哦")
+						var swiper = new Swiper('.swiper-container',{
+							loop:true,
+							pagination: {
+							  el: '.swiper-pagination',
+							  clickable: true,
+							}
+						})
+					})
+				},2000)
+			},
+			updated(){
+				console.log("我是updated，我执行了。。。")
+			}
+		})
+		
+	</script>
+```
+
+
+
+### 虚拟dom
+
+在Vue中，虚拟dom呀，其实是用js对象来模拟一个真实的dom节点，跟diff算法搭配，方便对比，最后找到哪些节点该复用，哪些节点不能复用，这是虚拟dom的一个解释
+
+### 过滤器
+
+相当于一个加工厂，将前面输入的结果进行处理，然后返回处理后的结果，有全局的和局部的，支持链式调用，和linux中的管道符一样
+
+```html
+	<body>
+		<div id="app">
+			<div style="border:1px solid #f40;width:200px" v-for="film in dataList">
+				<img :src="film.img | handleImgSrc" style="width:200px;"/>
+				<h3>{{film.nm}}</h3>
+			</div>
+		</div>
+	</body>
+	<script type="text/javascript">
+		var vm = new Vue({
+			el:"#app",
+			data:{
+				dataList:[],
+			},
+			mounted(){
+				axios.get("film.json")
+				.then(res=>{
+					console.log(res.data);
+					this.dataList = res.data.movieList;
+				})
+			},
+			filters:{
+				//通过过滤器将图片的src进行过滤，然后再返回，相当于一个加工厂
+				handleImgSrc(path){
+					return path.replace("w.h\/","");
+				}
+			}
+		})
+	</script>
+```
+
+
+
 
 

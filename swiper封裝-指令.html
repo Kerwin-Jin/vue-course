@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width initial-scale=1.0"/>
+		<title>Vue</title>
+		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+		<!-- <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
+		<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">  
+		<script src="https://unpkg.com/swiper/swiper-bundle.min.js"> </script>
+		<style>
+			.kerwin{
+				width: 600px;
+				height: 300px;
+				border: 1px solid #f40;
+				text-align: center;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			
+			<div class="swiper-container kerwin">
+				<div class="swiper-wrapper">
+					<div class="swiper-slide" v-for="item,index in dataList" v-swiper="{current:index,length:dataList.length}">{{item}}</div>
+				</div>
+				<div class="swiper-pagination"></div>
+			</div>
+		</div>
+		
+	</body>
+	<script type="text/javascript">
+		
+		//通过指定获取到dom元素，然后再利用指令中的生命周期函数可以知道什么时候dom插入完成了
+		// 知道这个时间点之后就可以new Swiper进行初始化了，
+		// 在这里只需要初始化一次就行，所以可以判断当前索引值是否等于数组长度，这些都是通过指令中的binding参数获得的
+		Vue.directive("swiper",{
+			inserted(el,binding,vnode){
+				console.log(el);
+				console.log(binding.value);
+				// console.log(vnode);
+				if(binding.value.current === binding.value.length-1){
+					var swiper = new Swiper('.swiper-container',{
+						loop:true,
+						pagination: {
+						  el: '.swiper-pagination',
+						  clickable: true,
+						}
+					})
+				}
+			}
+		})
+		
+		var vm = new Vue({
+			el:"#app",
+			data:{
+				dataList:[]
+			},
+			mounted(){
+				setTimeout(()=>{
+					this.dataList = ["aa","bb","cc","dd"]
+				},2000)
+			}
+		})
+		
+	</script>
+</html>

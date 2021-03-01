@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Vue</title>
+		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+		<meta name="viewport" content="width=device-width initial-scale=1.0"/>
+		<style>
+			
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			<div style="border:1px solid #f40;width:200px" v-for="film in dataList">
+				<img :src="film.img | handleImgSrc" style="width:200px;"/>
+				<h3>{{film.nm}}</h3>
+			</div>
+		</div>
+	</body>
+	<script type="text/javascript">
+		var vm = new Vue({
+			el:"#app",
+			data:{
+				dataList:[],
+			},
+			mounted(){
+				axios.get("film.json")
+				.then(res=>{
+					console.log(res.data);
+					this.dataList = res.data.movieList;
+				})
+			},
+			filters:{
+				//通过过滤器将图片的src进行过滤，然后再返回，相当于一个加工厂
+				handleImgSrc(path){
+					return path.replace("w.h\/","");
+				}
+			}
+		})
+	</script>
+</html>

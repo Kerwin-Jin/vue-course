@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width initial-scale=1.0"/>
+		<title>Vue</title>
+		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+		<!-- <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
+		<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">  
+		<script src="https://unpkg.com/swiper/swiper-bundle.min.js"> </script>
+		<style>
+			.kerwin{
+				width: 600px;
+				height: 300px;
+				border: 1px solid #f40;
+				text-align: center;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			
+			<div class="swiper-container kerwin">
+				<div class="swiper-wrapper">
+					<div class="swiper-slide" v-for="item,index in dataList">
+						{{item}}
+					</div>
+				</div>
+				<div class="swiper-pagination"></div>
+			</div>
+		</div>
+		
+	</body>
+	<script type="text/javascript">
+		
+		var vm = new Vue({
+			el:"#app",
+			data:{
+				dataList:[]
+			},
+			mounted(){
+				setTimeout(()=>{
+					this.dataList = ["aa","bb","cc","dd"]
+					
+					this.$nextTick(function(){
+						var str = "我执行的比update都晚(๑′ᴗ‵๑)Ｉ Lᵒᵛᵉᵧₒᵤ❤"
+						console.log(str)
+						var swiper = new Swiper('.swiper-container',{
+							loop:true,
+							pagination: {
+							  el: '.swiper-pagination',
+							  clickable: true,
+							}
+						})
+					})
+				},2000)
+			},
+			updated(){
+				console.log("我是updated，我执行了。。。")
+			}
+		})
+		
+	</script>
+</html>

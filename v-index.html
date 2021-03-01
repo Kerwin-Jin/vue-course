@@ -9,62 +9,27 @@
 		<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">  
 		<script src="https://unpkg.com/swiper/swiper-bundle.min.js"> </script>
 		<style>
-			.kerwin{
-				width: 600px;
-				height: 300px;
-				border: 1px solid #f40;
-				text-align: center;
-			}
+			
 		</style>
 	</head>
 	<body>
-		<code>var a=function{console.log("hello world!")}</code>
 		<div id="app">
-			<swiper :key="dataList.length" :option="{loop:true}">
-				<div class="swiper-slide" v-for="item in dataList">
-					{{item}}
-				</div>
-				<template #pagination>
-					<div class="swiper-pagination">
-					</div>
-				</template>
-			</swiper>
+			<div v-hello="color">111111</div>
+			<div v-hello="'blue'">111111</div>
+			<div v-hello="'green'">111111</div>
 		</div>
 		
 	</body>
 	<script type="text/javascript">
-		
-		Vue.component("swiper",{
-			props:["option"],
-			template:`
-				  <div class="swiper-container kerwin">
-				    <div class="swiper-wrapper">
-						<slot></slot>
-				    </div>
-					<slot name="pagination"></slot>
-				  </div>
-			`,
-			mounted() {
-				 var baseConfig = {
-					pagination: {
-					  el: '.swiper-pagination',
-					  clickable: true,
-					}
-				 }
-				 var swiper = new Swiper('.swiper-container', Object.assign(baseConfig,this.option));
-			}
+		Vue.directive("hello",function(el,binding){
+			el.style.color = binding.value;
 		})
-		
 		var vm = new Vue({
 			el:"#app",
 			data:{
-				dataList:[]
-			},
-			mounted(){
-				setTimeout(()=>{
-					this.dataList = ["aa","bb","cc"]
-				},2000)
+				color:"red"
 			}
+			
 		})
 		
 	</script>
