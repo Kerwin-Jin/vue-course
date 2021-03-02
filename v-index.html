@@ -6,31 +6,25 @@
 		<title>Vue</title>
 		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 		<!-- <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
-		<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">  
-		<script src="https://unpkg.com/swiper/swiper-bundle.min.js"> </script>
+		<!-- <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">  -->
+		<!-- <script src="https://unpkg.com/swiper/swiper-bundle.min.js"> </script> -->
+		<!-- <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script> -->
 		<style>
 			
 		</style>
 	</head>
 	<body>
 		<div id="app">
-			<div v-hello="color">111111</div>
-			<div v-hello="'blue'">111111</div>
-			<div v-hello="'green'">111111</div>
+			
 		</div>
 		
 	</body>
 	<script type="text/javascript">
-		Vue.directive("hello",function(el,binding){
-			el.style.color = binding.value;
-		})
 		var vm = new Vue({
 			el:"#app",
 			data:{
-				color:"red"
+				
 			}
-			
 		})
-		
 	</script>
 </html>
