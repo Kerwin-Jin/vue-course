@@ -1052,5 +1052,388 @@ yarn serve
 
 Vue路由就是让url路径和每个要显示的组件关联起来，当用户访问不同的url时，可以给用户展示对应的内容
 
+#### 路由原理
+
+hash路由：location.hash切换    window.onhashchange 监听路径的切换
+
+history路由：history.pushState切换   window.onpopstate 监听路径的切换
+
 #### 一级路由配置
+
+location.href可以获得完整的访问路径
+
+location.hash可以获得hash值
+
+通过在router目录下的index.js文件进行路由的配置
+
+```javascript
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+import Film from "../views/Film.vue"
+import Cinema from "../views/Cinema.vue"
+import Center from "../views/Center.vue"
+
+Vue.use(VueRouter)    //在Vue中全局注册路由
+
+//定义一个变量下边用
+const routes = [
+  {
+    path:"/film",
+    component:Film
+  },
+  {
+    path:"/center",
+    component:Center
+  },
+  {
+    path:"/cinema",
+    component:Cinema
+  }
+]
+
+
+//实例化一个VueRouter对象
+const router = new VueRouter({
+  routes:routes
+})
+
+
+//将该对象导出去，在main.js中需要导入该模块
+export default router
+
+```
+
+#### 声明式导航
+
+```html
+	<nav>
+        <ul>
+            <router-link to="/film" tag="li" active-class="kerwinactive">电影</router-link>
+            <router-link to="/cinema" tag="li" active-class="kerwinactive">影院</router-link>
+            <router-link to="/center" tag="li" active-class="kerwinactive">我的</router-link>
+        </ul>
+    </nav>
+```
+
+#### 重定向
+
+需要在router目录下的index.js文件进行路由的配置
+
+下面这条路由表示将任意的请求重定向到/film路径，优先级是最低的，当所有路由都匹配不到的时候才匹配这条路由
+
+```
+  {
+    path:"*",
+    redirect:"/film"
+  }
+```
+
+#### 嵌套路由
+
+一级路由下边包含另一层路由
+
+```javascript
+  {
+    //一级路由
+    path:"/film",
+    component:Film,
+    //嵌套路由
+    children:[
+      {
+        path:"nowplaying",      //简写方式，注意不加前面的/
+        component:Nowplaying
+      },
+      {
+        path:"/film/comingsoon",	//完整写法，从一级开始写到当前
+        component:Comingsoon
+      },
+      {
+        path:"",					//因为已经进入到/film路径了，所以将路径写为空然后直接重定向到/film/nowplaying，这样打开页面直接跳到这儿
+        redirect:"/film/nowplaying"
+      }
+    ]
+  },
+```
+
+#### 编程式导航
+
+声明式导航就是通过a链接href属性来跳
+
+编程式导航就是通过location.href来跳
+
+
+
+直接通过this.$router对象来实现跳转
+
+```javascript
+	methods:{
+        handleClick(filmId){
+            console.log(filmId);
+            // location.href=`#/detail`
+            // location.href=`#/detail${filmId}`
+            this.$router.push(`/detail/${filmId}`)		//通过编程式导航跳转到/detail/{id}页面
+        }
+    }
+```
+
+#### 动态路由
+
+当通过编程式导航跳转到detail页面时，有携带过来的电影ID，此时就需要动态路由来进行处理
+
+在router目录下的index.js文件进行配置。
+
+/detail/:filmId表明这是一个动态路由，通过" : "来占位，此路由可以匹配/detail/111、/detail/222、/detail/333、/detail/444等路由
+
+如果写成/detail/:filmId/a，则表示匹配/detail/111/a、/detail/222/a、/detail/333/a等路由
+
+```
+  {
+    path:"/detail/:filmId",
+    component:Detail
+  },
+```
+
+接下来就来到detail页面，在这个页面中我们需要获取到这个动态id才行啊，可以通过location.hash来获取，当然，Vue肯定也给我们想到了
+
+在detail页面中，可以直接通过this.$route来获取路径对象，注意是$route而不是路由对象$router。通过这个对象我们可以获取到参数
+
+this.$route.params.filmId
+
+注意哦，filmId就是上面我们创建动态路由时传的那个参数昂！
+
+```javascript
+ mounted(){
+        console.log("利用传过来的动态ID","向后端发送ajax请求");
+        console.log(this.$route.params.filmId);
+    }
+```
+
+
+
+#### 路由命名
+
+在编程式导航中，我们通过this.$router.push(/detail/${filmId})来进行跳转，此外，我们还可以给路由起名字，然后直接通过
+
+this.$router.push({name:"路由名字",params:{filmId:id}})来进行跳转
+
+首先在router目录下的index.js文件中进行配置，在这里我们将这个路由的名字起为"kerwinDetail"，这个是可以随便起的
+
+```javascript
+ {
+    path:"/detail/:filmId",
+    component:Detail,
+    name:"kerwinDetail"
+  },
+```
+
+然后进行路由的跳转
+
+```javascript
+    methods:{
+        handleClick(filmId){
+            console.log(filmId);  
+            this.$router.push({
+            	name:"kerwinDetail",
+            	params:{
+            		filmId:filmId
+            	}
+            })
+        }
+    }
+```
+
+#### query方式传参
+
+如果不想用动态路由的方式，也可以有另外一种选择，query方式进行参数传递。
+
+首先，在路由中进行路由的设置
+
+```
+ {
+    path:"/detail",
+    component:Detail
+  },
+```
+
+这样看就和普通的路由没啥区别，也不是动态路由
+
+在传参的时候要写成如下的格式
+
+```javascript
+ methods:{
+        handleClick(filmId){
+            console.log(filmId);
+            this.$router.push(`/detail?filmId=${filmId}`)
+        }
+    }
+```
+
+在detail页面中接收参数的时候就成了在query中获取了
+
+```javascript
+ mounted(){
+        console.log("利用传过来的动态ID","向后端发送ajax请求");
+        console.log(this.$route.query.filmId);
+    }
+```
+
+#### 路由模式
+
+Vue给提供了两种路由模式，一种是带#号的，这种叫做hash模式，也是默认的模式
+
+另外一种是history模式，需要在index.js配置，如下：
+
+```javascript
+const router = new VueRouter({
+  mode:"history",
+  routes:routes
+})
+```
+
+`vue-router` 默认 hash 模式 —— 使用 URL 的 hash 来模拟一个完整的 URL，于是当 URL 改变时，页面不会重新加载。
+
+如果不想要很丑的 hash，我们可以用路由的 **history 模式**，这种模式充分利用 `history.pushState` API 来完成 URL 跳转而无须重新加载页面。
+
+```js
+const router = new VueRouter({
+  mode: 'history',
+  routes: [...]
+})
+```
+
+当你使用 history 模式时，URL 就像正常的 url，例如 `http://yoursite.com/user/id`，也好看！
+
+不过这种模式要玩好，还需要后台配置支持。因为我们的应用是个单页客户端应用，如果后台没有正确的配置，当用户在浏览器直接访问 `http://oursite.com/user/id` 就会返回 404，这就不好看了。
+
+所以呢，你要在服务端增加一个覆盖所有情况的候选资源：如果 URL 匹配不到任何静态资源，则应该返回同一个 `index.html` 页面，这个页面就是你 app 依赖的页面。
+
+#### 路由拦截
+
+全局路由守卫
+
+适用多个组件需要做拦截操作的情况，比如个人中心、订单、金额、卡片等页面
+
+在router目录下的index.js进行路由拦截的配置
+
+```js
+//实例化一个VueRouter对象
+const router = new VueRouter({
+  routes:routes
+})
+
+//全局路由守卫
+router.beforeEach((to, from, next)=>{
+  const auth = ["/center","/order","/money","/card"]
+
+  if(auth.includes(to.fullPath)){
+    console.log("验证token")
+    if(!localStorage.getItem("token")){
+      next("/login")   //next("/ligon")加参数表示跳转到指定的地址
+    }else{
+      next()		
+    }
+  }else{
+    next()			//next()不加参数表示直接放行
+  }
+})
+
+
+//将该对象导出去，让main.js用
+export default router
+```
+
+局部路由守卫
+
+适用于单个组件需要被拦截的情况，比如只有个人中心需要被拦截，那就只在Center组件中进行配置进行
+
+在views目录下的Center.vue中配置如下：
+
+```js
+//局部路由守卫
+<script>
+export default {
+
+    beforeRouteEnter(to,from,next){
+		if(!localStorage.getItem("token")){
+          next("/login")   //next("/ligon")加参数表示跳转到指定的地址
+        }else{
+          next()		   //next()不加参数表示直接放行
+        }
+    },
+    mounted(){
+        
+    }
+}
+</script>
+```
+
+#### 路由懒加载
+
+单个页面中，对路由懒加载的需求还是多一点的
+
+当我们把单页面应用的项目写完之后，有一百多个组件，这时候项目打包只生成两个个js文件，
+
+一个app.js，我们写的组件中的js都在这里，另一个是chunk-vendors.js，这里面是放的vue以及其他依赖的js代码
+
+这样用户打开页面的时候就需要把1M多的js下载完才能看到页面，这样的用户体验是很不好的，所以最好进行代码片段分割，也就是懒加载，把每个组件打包成对应的一个js文件，需要这个组件的时候再动态的去加载，这样用户打开首页的时候只需要加载首页需要的js就行，大大提高打开网页的速度。
+
+方法如下：
+
+在router目录下的index.js中进行配置，假设我们需要把Login组件设置成懒加载
+
+```js
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+//import Login from "../views/Login.vue"           //在这里就不需要加载Login.vue了，
+import Center from "../views/Cente.vue"
+import Cinema from "../views/Cinema.vue"
+
+Vue.use(VueRouter)    //在Vue中注册路由
+
+//定义一个变量下边用
+const routes = [
+  {
+    path:"/center",
+    component:Center
+  },
+  {
+    path:"/cinema",
+    component:Cinema
+  },
+  {
+    path:"/login",
+    component:()=>import("../views/Login.vue")			//在这里进行Login.vue的动态加载
+  }
+]
+```
+
+此外也可以按组进行代码的分割，比如我们想要把Login和Center放到一个"kerwin-group"组里边，这样Login.vue和Center.vue就会被编译到一个js文件中。
+
+```js
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+//import Login from "../views/Login.vue"           //在这里就不需要加载Login.vue了，
+//import Center from "../views/Cente.vue"
+import Cinema from "../views/Cinema.vue"
+
+Vue.use(VueRouter)    //在Vue中注册路由
+
+//定义一个变量下边用
+const routes = [
+  {
+    path:"/login",
+    component:()=>import(/* webpackChunkName: "kerwin-group" */ "../views/Login.vue")			//在这里进行Login.vue的动态加载
+  },
+  {
+    path:"/center",
+    component:()=>import(/* webpackChunkName: "kerwin-group" */ "../views/Center.vue")
+  },
+  {
+    path:"/cinema",
+    component:Cinema
+  }
+]
+```
+
+
 
