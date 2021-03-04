@@ -444,8 +444,6 @@ fetch("**",{
 
 注意：fetch请求默认是不带cookie的，需要设置fetch(url,{credentials:'include'})，axios和jQuery都会默认带着cookie
 
-> https://unpkg.com/axios/dist/axios.min.js
-
 几个API接口
 
 >  https://autumnfish.cn/api/joke/list?num=3
@@ -1435,5 +1433,79 @@ const routes = [
 ]
 ```
 
+### 反向代理
 
+我们通过ajax向后端获取数据的时候有三种情况
+
+1、后端配置好cors，我们可以通过axios去获取数据，这需要后端在响应头中配置好`Access-Control-Allow-Origin:*` 允许任何地址访问
+
+```js
+//我们的请求地址[魅力惠]：http://www.mei.com/appapi/home/eventForH5
+methods:{
+    getData(){
+      axios.get("http://www.mei.com/appapi/home/eventForH5").then((res)=>{
+        console.log(res.data)
+      })
+    }
+  }
+```
+
+2、后端没有配置cors，我们要自己用代理去请求数据，Vue提供给我们了方法，就是在vue.config.js中进行配置
+
+我们的浏览器去跨域请求数据的时候，出于安全的考虑，会阻止我们跨域发送请求，但是服务器和服务器之间不会，vue.config.js就是利用了node。
+
+当我们向目标地址发送请求时，很明显这是跨域的，无法成功，这时候只要我们配置了反向代理，那么我们的请求将会发送给node，然后node帮我们去请求目标地址，他们中间是不会有跨域限制的，然后node再将请求到的数据发送给我们的浏览器，这样就顺利完成了我们的请求。
+
+在vue.config.js中配置如下：
+
+```js
+//我们的请求地址[猫眼电影]：https://m.maoyan.com/ajax/movieOnInfoList?token=&optimus_uuid=D8ECA0F06EE311EB8EA95FD7FC141CDDF355EB6FA6294E6C9A0DBA65F41D99E6&optimus_risk_level=71&optimus_code=10
+
+module.exports = {
+    devServer:{
+        proxy:{
+            '/ajax':{			//表示只要我们发送的请求中有/ajax,就会被代理，然后node就会帮我们做处理
+                target:"https://m.maoyan.com",
+                changeOrigin:true
+            }
+        }
+    }
+}
+```
+
+```js
+methods:{
+    getData(){
+      let url = `/ajax/movieOnInfoList?token=&optimus_uuid=D8ECA0F06EE311EB8EA95FD7FC141CDDF355EB6FA6294E6C9A0DBA65F41D99E6&optimus_risk_level=71&optimus_code=10`
+      axios.get(url).then((res)=>{
+        console.log(res.data)
+      })
+    }
+  }
+```
+
+
+
+> 参考vue.config.js官方文档  https://cli.vuejs.org/zh/config/#devserver-proxy
+
+3、虽然目标网站已经配置好了cors，但是为了不让数据被别人获取，所以又在请求投中设置了几个字段，要求请求的时候带上，这时候就需要我们自己去找到这几个特殊的字段，并配置好。
+
+```js
+methods:{
+    //我们的请求地址[卖座电影]：https://m.maizuo.com/gateway?cityId=440300&pageNum=1&pageSize=5&type=1&k=9350393    
+    getData(){
+      // axios的完整写法，里边支持我们设置请求头headers
+      axios({
+        url:"https://m.maizuo.com/gateway?cityId=440300&pageNum=1&pageSize=5&type=1&k=9350393",
+        headers:{
+          'X-Client-Info': '{"a":"3000","ch":"1002","v":"5.0.4","e":"1612578131297645528580097"}',
+          'X-Host': 'mall.film-ticket.film.list'
+        },
+        // method:"get"			//axios默认的请求方法就是get，不写这个也可以
+      }).then((res)=>{
+        console.log(res);
+      })
+    }
+  }
+```
 
