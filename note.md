@@ -1,3 +1,7 @@
+
+
+
+
 # VUE从入门到精通
 
 ### Vue原理
@@ -452,6 +456,8 @@ fetch("**",{
 
 ### axios
 
+> 官网地址：https://github.com/axios/axios#readme
+
 **get请求**
 
 ```javascript
@@ -479,6 +485,36 @@ axios.post("**",{
 	age:18
 }).then(res=>{console.log(res)}).then(err=>{console.log(err)})
 ```
+
+**axios拦截器**
+
+> https://github.com/axios/axios#interceptors
+
+可以让你在请求之前干点什么事，请求完成之后再干点什么事。有什么用呢？在【卖座电影】项目中，为了提高用户体验，我们需要在每个请求之前给用户一个提示“加载中...”，可以用vant组件库的Toast来实现，这里就可以用到axios的拦截器，
+
+```js
+// 添加一个请求拦截器
+axios.interceptors.request.use(function (config) {
+    // Do something before request is sent
+    return config;
+  }, function (error) {
+    // Do something with request error
+    return Promise.reject(error);
+  });
+
+// 添加一个响应拦截器
+axios.interceptors.response.use(function (response) {
+    // Any status code that lie within the range of 2xx cause this function to trigger
+    // Do something with response data
+    return response;
+  }, function (error) {
+    // Any status codes that falls outside the range of 2xx cause this function to trigger
+    // Do something with response error
+    return Promise.reject(error);
+  });
+```
+
+
 
 ### 组件
 
@@ -1508,4 +1544,194 @@ methods:{
     }
   }
 ```
+
+### Vuex
+
+适用于将整个项目的共享状态放到Vuex中，由他来集中管理。更细节来说，他能够帮我们承担非父子通信的能力，但绝对不是只能做非父子通信
+
+如何用？以我们的【卖座电影】项目为例
+
+首先在router目录下的index.js中进行配置
+
+```js
+import Vue from 'vue'
+import Vuex from 'vuex'
+
+Vue.use(Vuex)
+
+// 创建Store对象
+export default new Vuex.Store({
+  state: {
+    cityId:'310100',
+    cityName:'北京'		//初始值我们设置的是“北京”
+  },
+  // mutations: {
+  // },
+  // actions: {
+  // },
+  // modules: {
+  // }
+})
+
+```
+
+记得需要在项目的主配置文件main.js进行注册
+
+```js
+import Vue from 'vue'
+import App from './App.vue'
+import router from './router/index.js'
+import store from './store'		//引入store
+
+Vue.config.productionTip = false
+
+new Vue({
+  router,   //全局注册，可以通过this.$router访问到
+  store,    //可以通过this.$store访问到
+  render: h => h(App)
+}).$mount('#app')
+```
+
+接着我们在某一个组件中进行状态的修改
+
+```js
+handleChangePage(name){
+    //将当前选中的城市ID和城市名字传出去
+    this.$store.state.cityName = name		//进行状态的修改,比如这里我们修改为“上海”
+    this.$router.back()
+}
+```
+
+最后在另一个组件中获取值的时候可以看到值已经被修改了
+
+```js
+<van-nav-bar title="影院" @click-left="onClickLeft" @click-right="onClickRight">
+    <template #left>
+        {{$store.state.cityName}}		//这里获取到的值就是“上海”
+        <van-icon name="arrow-down" color="#000" size="10"/>
+    </template>
+    <template #right>
+        <van-icon name="search" size="18" />
+    </template>
+</van-nav-bar>
+```
+
+上面的例子能看出来，公共资源很方便，大家可以随时去拿，随时去修改他，但是如果不加以严格管控，就会出现不经意或恶意的破坏，一旦出现了问题，我们可能调查谁导致的，就很难了。那么，如何严格有效的把控我们的公共办公环境呢？有一种非常好的方案就是如果你要开放办公，没有问题，但是要在办公区域安装一个摄像头，
+
+访问的话没有问题，修改的话，切记切记，不要直接去修改，那么怎么修改呢？可以通过 `this.$store.commit()` 提交到我们的store中去修改，也就是说，我们把所有的修改都集中在store中去修改，这样即使有错误，那么错误也只会发生在store中。
+
+这里的commit方法是一个固定的方法，第一个参数传入的是名字，第二个参数传的是值，比如 `this.$store.commit('changeCityName',name)` 
+
+然后在store目录下的index.js中进行配置mutations
+
+```js
+import Vue from 'vue'
+import Vuex from 'vuex'
+
+Vue.use(Vuex)
+
+export default new Vuex.Store({
+  state: {
+    cityId:'310100',
+    cityName:'北京'
+  },
+  //集中式的修改状态
+  mutations: {
+    changeCityName(state,name){
+      state.cityName = name
+    }
+  }
+})
+
+```
+
+
+
+### BetterScroll
+
+> 官方地址：​https://better-scroll.github.io/docs/zh-CN/guide/
+
+一款滚动插件，用于列表太长的显示
+
+```node
+# 安装
+yarn add better-scroll
+
+# 引入
+import BetterScroll from "better-scroll"
+```
+
+使用方法比较简单，只需要在需要滚动的盒子上添加一个类，然后初始化这个类就可以用，在这里我们需要初始化cinema这个盒子
+
+```html
+<template>
+    <div class="cinema" :style="{height:height}">
+        <ul>
+            <li v-for="item in dataList" :key="item.cinemaId">
+                {{item.name}}
+                <p>{{item.address}}</p>
+            </li>
+        </ul>
+    </div>
+</template>
+```
+
+当数据请求完成并且dom挂载完成之后，开始初始化BetterScroll插件，这里用到$nextTick()这个函数，这个函数在dom渲染完成之后执行
+
+```js
+data(){
+    return{
+        dataList:[],
+        height:0
+    }
+},
+mounted(){
+
+    //这里
+    this.height = document.documentElement.clientHeight-50+"px";
+    
+    //用封装完axios的http模块进行数据请求
+    http({
+        url:'/gateway?cityId=310100&ticketFlag=1&k=6714633',
+        headers:{
+            'X-Host': 'mall.film-ticket.cinema.list'
+        }
+    })
+        .then(res=>{
+        console.log(res)
+        this.dataList = res.data.data.cinemas
+
+        //当数据请求完成并且dom挂载完成之后，开始初始化BetterScroll插件，这里用到$nextTick()这个函数，这个函数在dom渲染完成之后执行
+        this.$nextTick(()=>{
+            new BetterScroll(".cinema",{
+                //添加滚动条
+                scrollbar:{
+                    fade:true
+                }
+            });
+        })
+    })      
+}
+```
+
+如果需要添加滚动条，需要修正一下滚动条的位置，在.cinema盒子上添加position属性，值为relative
+
+```css
+.cinema{
+    overflow: hidden;
+    position: relative;		//添加这个属性修正以滚动条的位置
+}
+```
+
+### 小技巧
+
+数组合并的方法，利用ES6中的展开运算符
+
+```js
+var a=[1,2,3]
+var b=[4,5,6]
+var c = [...a,...b]
+```
+
+
 
