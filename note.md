@@ -1547,9 +1547,11 @@ methods:{
 
 ### Vuex
 
+#### 同步（组件通信）
+
 适用于将整个项目的共享状态放到Vuex中，由他来集中管理。更细节来说，他能够帮我们承担非父子通信的能力，但绝对不是只能做非父子通信
 
-如何用？以我们的【卖座电影】项目为例
+如何用？以我们的【卖座电影】项目为例：我们需要在CIty组件中选择对应的城市，然后在Cinema组件中将选中城市的影院数据显示出来。这其中就涉及到了组件通信。
 
 首先在router目录下的index.js中进行配置
 
@@ -1561,16 +1563,11 @@ Vue.use(Vuex)
 
 // 创建Store对象
 export default new Vuex.Store({
+  // state表示状态，这里设置了两个状态，一个cityId，一个cityName
   state: {
     cityId:'310100',
     cityName:'北京'		//初始值我们设置的是“北京”
-  },
-  // mutations: {
-  // },
-  // actions: {
-  // },
-  // modules: {
-  // }
+  }
 })
 
 ```
@@ -1592,7 +1589,7 @@ new Vue({
 }).$mount('#app')
 ```
 
-接着我们在某一个组件中进行状态的修改
+接着我们在CIty组件中进行状态的修改
 
 ```js
 handleChangePage(name){
@@ -1602,7 +1599,7 @@ handleChangePage(name){
 }
 ```
 
-最后在另一个组件中获取值的时候可以看到值已经被修改了
+最后在Cinema组件中获取值的时候可以看到值已经被修改了
 
 ```js
 <van-nav-bar title="影院" @click-left="onClickLeft" @click-right="onClickRight">
@@ -1616,11 +1613,11 @@ handleChangePage(name){
 </van-nav-bar>
 ```
 
-上面的例子能看出来，公共资源很方便，大家可以随时去拿，随时去修改他，但是如果不加以严格管控，就会出现不经意或恶意的破坏，一旦出现了问题，我们可能调查谁导致的，就很难了。那么，如何严格有效的把控我们的公共办公环境呢？有一种非常好的方案就是如果你要开放办公，没有问题，但是要在办公区域安装一个摄像头，
+上面的例子能看出来，公共资源很方便，大家可以随时去拿，随时去修改他，但是如果不加以严格管控，就会出现不经意或恶意的破坏，一旦出现了问题，我们可能调查谁导致的，就很难了。那么，如何严格有效的把控我们的公共办公环境呢？有一种非常好的方案就是如果你要开放办公，没有问题，但是要在办公区域安装一个摄像头，这个摄像头就是mutations。
 
 访问的话没有问题，修改的话，切记切记，不要直接去修改，那么怎么修改呢？可以通过 `this.$store.commit()` 提交到我们的store中去修改，也就是说，我们把所有的修改都集中在store中去修改，这样即使有错误，那么错误也只会发生在store中。
 
-这里的commit方法是一个固定的方法，第一个参数传入的是名字，第二个参数传的是值，比如 `this.$store.commit('changeCityName',name)` 
+这里的commit方法是一个固定的方法，第一个参数传入的是方法名字，第二个参数传的是值，比如 `this.$store.commit('changeCityName',name)` 表示调用$store中mutations中的changeCityName这个方法，并将name值传过去。
 
 然后在store目录下的index.js中进行配置mutations
 
@@ -1644,6 +1641,58 @@ export default new Vuex.Store({
 })
 
 ```
+
+注意：$store只是存在内存中，每次刷新页面都会恢复为初始的值
+
+在【卖座电影】项目中，还有一个场景也能用到Vuex的状态管理，那就是底部的Tabbar导航栏，并不是所有页面都显示这个导航栏，在影片详情页中就不需要显示这个Tabbar，我们可以设置一个全局的状态来管控Tabbar的显示。
+
+首先在store目录下的index.js中添加控制Tabbar显示与否的状态
+
+```js
+state: {
+    cityId:'310100',
+    cityName:'北京',
+    isTabbarShow:true		//控制Tabbar显示与否的状态，初始值为true，表示默认是显示的
+}
+```
+
+当点击某一个电影后，跳转到详情页，这时候会加载Detail组件，当该组件挂载完之后，我们将值设为false，这里可以直接设置`this.$store.state.isTabbarShow=false` 但是，正如上面说的那样，不能让他们随意修改，得交给中央，让中央进行改变，所以这里用`this.$store.commit("hide")` ，当离开影片详情页后，Detail就得销毁了，在销毁之前，将值设为true，让Tabbar可见，
+
+```js
+mounted(){
+    //通过$state中的isTabbarShow让底部导航栏隐藏
+    this.$store.commit("hide")
+    //...
+},
+//在详情页销毁之前记得要把底部导航栏的状态设为true
+beforeDestroy(){
+     this.$store.commit("show")
+}
+```
+
+在mutations中定义这两个方法
+
+```js
+//集中式修改状态
+mutations: {
+    //...
+    //这里不需要传值过来，只需要将state传过来就行
+    hide(state){
+    	state.isTabbarShow = false
+    },
+    show(state){
+    	state.isTabbarShow = true
+    }
+}
+```
+
+#### 异步（后端数据快照）
+
+想象这样一个场景，两个组件A和B都需要向后端请求数据，巧的是这两个组件请求的数据是一样的，那么有必要让每个组件都向后端请求吗？有没有更好的办法？Vuex的异步提供了解决办法。他的思路是当A请求数据时，先交给Vuex，让他去向后端请求，Vuex请求完之后给A组件，同时Vuex中也保存了一份数据，这时候B给Vuex发请求，说我要xxx数据，请你给我去向后端请求一下，Vuex说我这就有，直接给你了。这样数据就直接给B了，不用再向服务器发请求了。
+
+在【卖座电影】项目中，Cinema组件需要请求某一个城市的电影院信息，影院搜索组件也需要请求相同的数据，这样，就可以用Vuex来实现。
+
+![vuex异步流程图](https://vuex.vuejs.org/vuex.png)
 
 
 
