@@ -1694,7 +1694,194 @@ mutations: {
 
 ![vuex异步流程图](https://vuex.vuejs.org/vuex.png)
 
+#### vuex-module
 
+如果把所有的全局状态都写在一个vuex配置文件中，自己写一个小项目还可以没问题，但是如果是一个大项目，分工开发，所有人都去改vuex的配置文件，那就会改的乱七八糟，一个状态至少也得提供一个方法去处理，状态一多，整个配置文件就会显得特别臃肿，所以这里引入了一个模块化的配置。
+
+原则上一个项目只能有一个store对象，实际上也是这样，那如何将一个store拆分开呢？这里采用火车上轮船的方案：将火车拆分成多节装上轮船。将一个配置文件拆成多个，在一个总的配置文件中将其他导入。
+
+在【卖座电影】项目中，我们进行模块化的改造
+
+首先，在store目录下创建一个module目录，用来存放各个子模块的配置文件，在项目中我们用到了三个模块，CinemaModule、CityModule和TabbarModule
+
+所以在module目录下分别创建CinemaModule.js、CityModule.js和TabbarModule.js，每个模块只负责与自己相关的state，mutations，actions就够了
+
+以CinemaModule为例
+
+```js
+import http from "@/util/http"
+const module = {
+    namespaced:true,
+    state:{
+        cinemaList:[]
+    },
+    mutations:{
+        setCinemaList(state, cinemaList){
+            state.cinemaList = cinemaList
+        },
+        clearCinemaList(state){
+            state.cinemaList = []
+        }
+    },
+    actions:{
+        getCinemaData(store, cityId){
+            return http({
+                url:`/gateway?cityId=${cityId}&ticketFlag=1&k=6714633`,
+                headers:{
+                    'X-Host': 'mall.film-ticket.cinema.list'
+                }
+            })
+            .then(res=>{
+                    console.log(res)
+                    //将数据提交给mutations
+                    store.commit("setCinemaList",res.data.data.cinemas)
+            })
+        }
+    }
+}
+
+export default module
+```
+
+三个子模块创建好后，在store目录下的index.js中的modules进行引入
+
+```js
+import Vue from 'vue'
+import Vuex from 'vuex'
+import CityModule from './module/CityModule'
+import TabbarModule from './module/TabbarModule'
+import CinemaModule from './module/CinemaModule'
+
+Vue.use(Vuex)
+// 创建Store对象
+export default new Vuex.Store({
+
+  //公共状态
+  state: {
+
+  },
+
+  //集中式修改状态
+  mutations: {
+    
+  },
+
+  //专门做异步的
+  actions: {
+
+  },
+  //各个模块-组装火车
+  modules: {
+    CityModule,
+    TabbarModule,
+    CinemaModule
+  }
+})
+
+```
+
+然后在项目中用到的地方就可以通过this.$store.CityModule.cityId进行引入，但是这样一层一层点下去太长了，所以Vuex又给我们提供了一种方式：
+
+通过`mapState` 、`mapMutations` 、`mapActions ` 进行映射，怎么用呢？
+
+我们以TabbarModule的显示与否为例。我们记得在TabbarModule的state中有一个属性`isTabbarShow` 来控制底部Tabbar的显示与否。先在TabbarModule中开启命名空间
+
+```js
+const module = {
+    namespaced:true,		//开启命名空间
+    state:{
+        isTabbarShow:true,
+    },
+    mutations:{
+        hide(state){
+            state.isTabbarShow = false
+        },
+        show(state){
+            state.isTabbarShow = true
+        }
+    },
+    actions:{
+
+    }
+}
+
+export default module
+```
+
+然后就可以在需要操作`isTabbarShow` 的组件中进行使用了，当我们需要映射state时，在computed计算属性中通过es6的展开运算符将需要用到的状态抽出来，噢对了，记得要导入vuex中的mapState()方法，导入这个方法我们才能用他来进行抽取
+
+```js
+<template>
+  <div>
+    <router-view></router-view>
+    <tabbar v-show="isTabbarShow"></tabbar>
+  </div>
+</template>
+
+<script>
+import tabbar from "./components/Tabbar"
+import {mapState} from "vuex"	导入vuex中的mapState()方法
+
+export default {
+  components:{
+    tabbar:tabbar
+  },
+  data(){
+    return{
+      
+    }
+  },
+  computed:{
+   ...mapState("TabbarModule",['isTabbarShow'])//在computed计算属性中通过es6的展开运算符将需要用到的状态抽出来，计算属性的名字就是isTabbarShow
+  },
+  mounted(){
+    console.log(mapState("TabbarModule",['isTabbarShow']))
+  }
+}
+</script>
+
+```
+
+然后在这个组件中就可以用计算属性来代替之前的this.$store.state.isTabbarShow了
+
+```
+//之前
+<tabbar v-show="this.$store.state.isTabbarShow"></tabbar>
+//现在
+<tabbar v-show="isTabbarShow"></tabbar>		//用计算属性来代替之前的一长串
+```
+
+同样的，如果需要映射mutations时，就通过...mapMutations("TabbarModule",['show','hide'])，
+
+映射actions时，就通过...mapActions("CinemaModule",['getCinemaData']),
+
+在这里注意，**第二个参数是一个数组**，可以映射多个方法或状态出来
+
+#### Vuex持久化
+
+当我们刷新页面的时候，Vuex中存储的数据就重新开始了，因为Vuex是存储在内存中的，如果想要持久化存储，这里有一个小的库，这并不是Vue官方给的库，但是这个库可以实现持久化
+
+> https://github.com/robinvdvleuten/vuex-persistedstate
+
+使用很简单
+
+```js
+import { createStore } from "vuex";
+import createPersistedState from "vuex-persistedstate";
+
+const store = createStore({
+  // ...
+  plugins: [createPersistedState()],
+});
+```
+
+
+
+#### 注意
+
+1. 应用层级的状态应该集中到单个store对象中
+2. 提交mutation是更改状态的唯一方法，并且这个过程是同步的
+3. 异步逻辑都应该封装到action里面
 
 ### BetterScroll
 
